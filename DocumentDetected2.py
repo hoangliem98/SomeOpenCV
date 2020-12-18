@@ -5,7 +5,7 @@ import argparse
 import cv2
 import imutils
 
-filename = 'doc1.jpg'
+filename = 'doc2.jpg'
 image = cv2.imread(filename)
 ratio = image.shape[0] / 500.0
 orig = image.copy()
