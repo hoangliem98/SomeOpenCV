@@ -56,7 +56,18 @@ def getWarp(img, biggest):
     imgOutput = cv.warpPerspective(img, matrix, (width,height))
     return imgOutput
 
-file = "doc2.jpg"
+def unsharp_mask(image, kernel_size=(5, 5), sigma=1.0, amount=1.0, threshold=0):
+    blurred = cv.GaussianBlur(image, kernel_size, sigma)
+    sharpened = float(amount + 1) * image - float(amount) * blurred
+    sharpened = np.maximum(sharpened, np.zeros(sharpened.shape))
+    sharpened = np.minimum(sharpened, 255 * np.ones(sharpened.shape))
+    sharpened = sharpened.round().astype(np.uint8)
+    if threshold > 0:
+        low_contrast_mask = np.absolute(image - blurred) < threshold
+        np.copyto(sharpened, image, where=low_contrast_mask)
+    return sharpened
+
+file = "doc1.jpg"
 #ileImg = imutils.rotate(cv.imread(file),30)
 img = cv.imread(file)
 #img = cv.copyMakeBorder(fileImg,20,100,20,270,cv.BORDER_CONSTANT,value=brown)
@@ -65,21 +76,9 @@ imgContour = img.copy()
 imgThres = preProcessing(img)
 biggest = getContours(imgThres)
 imgWarped = getWarp(img, biggest)
+sharpened_image = unsharp_mask(imgWarped)
 
-cv.imshow(file, imgWarped)
-cv.imwrite("savetest.jpg", imgWarped)
+cv.imshow(file, sharpened_image)
+cv.imwrite("savetest.jpg", sharpened_image)
 cv.imshow("originale", imgContour)
 cv.waitKey(0)
-
-
-
-
-#img = np.zeros((512,550,3), np.uint8)
-#img[:] = 255,255,255
-
-#print(img.shape[1])
-##cv.line(img,(0,0),(img.shape[1],img.shape[0]),(255,255,0),3)
-#cv.rectangle(img,(10,50),(20,10),(225,225,0),3)
-
-#cv.imshow("Image", img)
-#cv.waitKey(0)
