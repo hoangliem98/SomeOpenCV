@@ -2,7 +2,7 @@ import cv2 as cv
 import numpy as np
 #import imutils
 
-width, height = 540, 720 
+width, height = 580, 720 
 brown = 19,69,139
 
 def preProcessing(img):
@@ -48,14 +48,6 @@ def reorder(myPoints):
     myPointsNew[2] = myPoints[np.argmax(diff)]
     return myPointsNew
 
-def getWarp(img, biggest):
-    biggest = reorder(biggest)
-    pst1 = np.float32(biggest)
-    pst2 = np.float32([[0,0],[width,0],[0,height],[width,height]])
-    matrix = cv.getPerspectiveTransform(pst1,pst2)
-    imgOutput = cv.warpPerspective(img, matrix, (width,height))
-    return imgOutput
-
 def unsharp_mask(image, kernel_size=(5, 5), sigma=1.0, amount=1.0, threshold=0):
     blurred = cv.GaussianBlur(image, kernel_size, sigma)
     sharpened = float(amount + 1) * image - float(amount) * blurred
@@ -67,8 +59,17 @@ def unsharp_mask(image, kernel_size=(5, 5), sigma=1.0, amount=1.0, threshold=0):
         np.copyto(sharpened, image, where=low_contrast_mask)
     return sharpened
 
+def getWarp(img, biggest):
+    biggest = reorder(biggest)
+    pst1 = np.float32(biggest)
+    pst2 = np.float32([[0,0],[width,0],[0,height],[width,height]])
+    matrix = cv.getPerspectiveTransform(pst1,pst2)
+    imgOutput = cv.warpPerspective(img, matrix, (width,height))
+    outputSharpen = unsharp_mask(imgOutput)
+    return outputSharpen
+
 file = "doc1.jpg"
-#ileImg = imutils.rotate(cv.imread(file),30)
+#fileImg = imutils.rotate(cv.imread(file),30)
 img = cv.imread(file)
 #img = cv.copyMakeBorder(fileImg,20,100,20,270,cv.BORDER_CONSTANT,value=brown)
 
@@ -76,9 +77,8 @@ imgContour = img.copy()
 imgThres = preProcessing(img)
 biggest = getContours(imgThres)
 imgWarped = getWarp(img, biggest)
-sharpened_image = unsharp_mask(imgWarped)
 
-cv.imshow(file, sharpened_image)
-cv.imwrite("savetest.jpg", sharpened_image)
-cv.imshow("originale", imgContour)
+cv.imshow(file, imgWarped)
+#cv.imwrite("savetest.jpg", sharpened_image)
+cv.imshow("original", imgContour)
 cv.waitKey(0)

@@ -60,7 +60,6 @@ class App():
                 cv.circle(self.mask, (x, y), self.thickness, self.value['val'], -1)
 
     def run(self):
-
         image = cv.imread('1.jpg')
         self.img = cv.resize(src=image, dsize=(300, 400))
         self.img2 = self.img.copy()                          
@@ -94,7 +93,7 @@ class App():
                 cv.imwrite('test_output.png', self.output)
                 print(" Lưu thành công \n")
             elif k == ord('r'): # reset everything
-                print("Đang reset ảnh \n")
+                print("Reset ảnh \n")
                 self.rect = (0,0,1,1)
                 self.drawing = False
                 self.rectangle = False
@@ -120,7 +119,6 @@ class App():
 
             mask2 = np.where((self.mask==1) + (self.mask==3), 255, 0).astype('uint8')
             self.output = cv.bitwise_and(self.img2, self.img2, mask=mask2)
-
 
 if __name__ == '__main__':
     print(__doc__)
