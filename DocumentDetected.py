@@ -1,12 +1,32 @@
 import cv2 as cv
 import numpy as np
 import math
+import pytesseract
 from scipy import ndimage
 #import imutils
 
-width, height = 580, 720 
+width, height = 640, 780 
 brown = 19,69,139
 
+#lấy số lượng chữ lấy ra từ ảnh
+def getTextNumber(img):
+    pytesseract.pytesseract.tesseract_cmd = 'D:\\LN\\Tesseract\\tesseract.exe'
+    gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)  
+    ret, thresh1 = cv.threshold(gray, 0, 255, cv.THRESH_OTSU | cv.THRESH_BINARY_INV)   
+    rect_kernel = cv.getStructuringElement(cv.MORPH_RECT, (18, 18))   
+    dilation = cv.dilate(thresh1, rect_kernel, iterations = 1)  
+    contours, hierarchy = cv.findContours(dilation, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE) 
+  
+    im2 = img.copy() 
+  
+    for cnt in contours: 
+        x, y, w, h = cv.boundingRect(cnt)    
+        rect = cv.rectangle(im2, (x, y), (x + w, y + h), (0, 255, 0), 2)    
+        cropped = im2[y:y + h, x:x + w]    
+        text = pytesseract.image_to_string(cropped) 
+    return len(text)
+
+#Xoay ảnh thẳng đứng
 def rotate(img):
     img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
     img_edges = cv.Canny(img_gray, 100, 100, apertureSize=3)
@@ -19,15 +39,22 @@ def rotate(img):
         angles.append(angle)
 
     median_angle = np.median(angles)
-    if median_angle < 0:
-        img = cv.rotate(img, cv.ROTATE_90_CLOCKWISE)
-        median_angle += 90
-    elif median_angle > 0:
-        img = cv.rotate(img, cv.ROTATE_90_COUNTERCLOCKWISE)
-        median_angle -= 90
     print("angle", median_angle)
+    img = ndimage.rotate(img, median_angle)
     return img
 
+#Kiểm tra xem số lượng chữ ở chiều nào lọc được chính xác hơn thì lấy chiều đó làm chính
+def checkTextRotate(img): 
+    imgTmp = ndimage.rotate(img, 180)
+    imgs = [img, imgTmp]
+    maxText = 0
+    for i in imgs:
+        if(getTextNumber(i) > maxText):
+            maxText = getTextNumber(i)
+            img = i
+    return img
+
+#Lọc ảnh để lấy phần document
 def preProcessing(img):
     imgGray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
     imgBlur = cv.GaussianBlur(img,(5,5),1)
@@ -82,6 +109,7 @@ def unsharp_mask(image, kernel_size=(5, 5), sigma=1.0, amount=1.0, threshold=0):
 
 def getWarp(img, biggest):
     biggest = reorder(biggest)
+    print(biggest)
     pst1 = np.float32(biggest)
     pst2 = np.float32([[0,0],[width,0],[0,height],[width,height]])
     matrix = cv.getPerspectiveTransform(pst1,pst2)
@@ -99,8 +127,9 @@ imgContour = img.copy()
 imgThres = preProcessing(img)
 biggest = getContours(imgThres)
 imgWarped = getWarp(img, biggest)
+imgWarped = checkTextRotate(imgWarped)
 
 cv.imshow(file, imgWarped)
-cv.imwrite("savetest1.jpg", imgWarped)
+cv.imwrite("savetest.jpg", imgWarped)
 cv.imshow("original", imgContour)
 cv.waitKey(0)
