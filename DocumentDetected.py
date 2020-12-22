@@ -5,6 +5,28 @@ import numpy as np
 width, height = 580, 720 
 brown = 19,69,139
 
+def rotate(img):
+    img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    img_edges = cv2.Canny(img_gray, 100, 100, apertureSize=3)
+    lines = cv2.HoughLinesP(img_edges, 1, math.pi / 180.0, 100, minLineLength=100, maxLineGap=5)
+
+    angles = []
+
+    for [[x1, y1, x2, y2]] in lines:
+        cv2.line(img, (x1, y1), (x2, y2), (255, 0, 0), 3)
+        angle = math.degrees(math.atan2(y2 - y1, x2 - x1))
+        angles.append(angle)
+
+    median_angle = np.median(angles)
+    if median_angle < 0:
+        img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+        median_angle += 90
+    elif median_angle > 0:
+        img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        median_angle -= 90
+    print("angle", median_angle)
+    return img
+
 def preProcessing(img):
     imgGray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
     imgBlur = cv.GaussianBlur(img,(5,5),1)
@@ -71,6 +93,7 @@ def getWarp(img, biggest):
 file = "doc1.jpg"
 #fileImg = imutils.rotate(cv.imread(file),30)
 img = cv.imread(file)
+img = rotate(img)
 #img = cv.copyMakeBorder(fileImg,20,100,20,270,cv.BORDER_CONSTANT,value=brown)
 
 imgContour = img.copy()
@@ -79,6 +102,6 @@ biggest = getContours(imgThres)
 imgWarped = getWarp(img, biggest)
 
 cv.imshow(file, imgWarped)
-#cv.imwrite("savetest.jpg", sharpened_image)
+cv.imwrite("savetest1.jpg", imgWarped)
 cv.imshow("original", imgContour)
 cv.waitKey(0)
