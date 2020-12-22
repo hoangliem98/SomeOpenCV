@@ -109,7 +109,6 @@ def unsharp_mask(image, kernel_size=(5, 5), sigma=1.0, amount=1.0, threshold=0):
 
 def getWarp(img, biggest):
     biggest = reorder(biggest)
-    print(biggest)
     pst1 = np.float32(biggest)
     pst2 = np.float32([[0,0],[width,0],[0,height],[width,height]])
     matrix = cv.getPerspectiveTransform(pst1,pst2)
@@ -117,7 +116,7 @@ def getWarp(img, biggest):
     outputSharpen = unsharp_mask(imgOutput)
     return outputSharpen
 
-file = "doc1.jpg"
+file = "doc2.jpg"
 #fileImg = imutils.rotate(cv.imread(file),30)
 img = cv.imread(file)
 img = rotate(img)
@@ -126,10 +125,13 @@ img = rotate(img)
 imgContour = img.copy()
 imgThres = preProcessing(img)
 biggest = getContours(imgThres)
-imgWarped = getWarp(img, biggest)
-imgWarped = checkTextRotate(imgWarped)
+if len(biggest) == 0:
+    print("Bad Image")
+else:
+    imgWarped = getWarp(img, biggest)
+    imgWarped = checkTextRotate(imgWarped)
 
-cv.imshow(file, imgWarped)
-cv.imwrite("savetest.jpg", imgWarped)
-cv.imshow("original", imgContour)
-cv.waitKey(0)
+    cv.imshow(file, imgWarped)
+    cv.imwrite("savetest.jpg", imgWarped)
+    cv.imshow("original", imgContour)
+    cv.waitKey(0)
