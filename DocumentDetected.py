@@ -1,28 +1,29 @@
 import cv2 as cv
 import numpy as np
+import math
+from scipy import ndimage
 #import imutils
 
 width, height = 580, 720 
 brown = 19,69,139
 
 def rotate(img):
-    img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    img_edges = cv2.Canny(img_gray, 100, 100, apertureSize=3)
-    lines = cv2.HoughLinesP(img_edges, 1, math.pi / 180.0, 100, minLineLength=100, maxLineGap=5)
+    img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    img_edges = cv.Canny(img_gray, 100, 100, apertureSize=3)
+    lines = cv.HoughLinesP(img_edges, 1, math.pi / 180.0, 100, minLineLength=100, maxLineGap=5)
 
     angles = []
 
     for [[x1, y1, x2, y2]] in lines:
-        cv2.line(img, (x1, y1), (x2, y2), (255, 0, 0), 3)
         angle = math.degrees(math.atan2(y2 - y1, x2 - x1))
         angles.append(angle)
 
     median_angle = np.median(angles)
     if median_angle < 0:
-        img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+        img = cv.rotate(img, cv.ROTATE_90_CLOCKWISE)
         median_angle += 90
     elif median_angle > 0:
-        img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        img = cv.rotate(img, cv.ROTATE_90_COUNTERCLOCKWISE)
         median_angle -= 90
     print("angle", median_angle)
     return img
@@ -57,8 +58,6 @@ def getContours(img):
 
 def reorder(myPoints):
     myPoints = myPoints.reshape((4,2))
-    #if (myPoints[1][1] - myPoints[0][1]) > (myPoints[2][0] - myPoints[1][0]):
-    #    print(myPoints[1] - myPoints[0])
     myPointsNew = np.zeros((4,1,2),np.int32)
     add = myPoints.sum(1)
     print(myPoints[1][1] - myPoints[0][1])

@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>9270c5dd-1645-46f5-8bf5-ec8f36020b6c</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>TextDetected.py</StartupFile>
+    <StartupFile>DocumentDetected.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
