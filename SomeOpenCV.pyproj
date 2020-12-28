@@ -21,9 +21,15 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="DocDetect.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="DocumentDetected.py" />
     <Compile Include="DocumentDetected2.py" />
     <Compile Include="RemoveBackground.py" />
+    <Compile Include="Rotate.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Sharpen2.py">
       <SubType>Code</SubType>
     </Compile>

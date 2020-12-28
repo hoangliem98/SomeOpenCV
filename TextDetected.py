@@ -1,62 +1,49 @@
-import cv2 as cv
+from PIL import Image
 import pytesseract
-from scipy import ndimage
+import argparse
+import cv2
+import os
+ 
+# Xây dựng hệ thống tham số đầu vào
+# -i file ảnh cần nhận dạng
+# -p tham số tiền xử lý ảnh (có thể bỏ qua nếu không cần). Nếu dùng: blur : Làm mờ ảnh để giảm noise, thresh: Phân tách đen trắng
+ap = argparse.ArgumentParser()
+ap.add_argument("-i", "--image", required=True,
+	help="Đường dẫn đến ảnh muốn nhận dạng")
+ap.add_argument("-p", "--preprocess", type=str, default="thresh",
+	help="Bước tiền xử lý ảnh")
+args = vars(ap.parse_args())
 
-file = "savetest.jpg"
-  
-pytesseract.pytesseract.tesseract_cmd = 'D:\\LN\\Tesseract\\tesseract.exe'
-  
-def getTextNumber(img):
-    gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)  
-    ret, thresh1 = cv.threshold(gray, 0, 255, cv.THRESH_OTSU | cv.THRESH_BINARY_INV)   
-    rect_kernel = cv.getStructuringElement(cv.MORPH_RECT, (18, 18))   
-    dilation = cv.dilate(thresh1, rect_kernel, iterations = 1)  
-    contours, hierarchy = cv.findContours(dilation, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE) 
-  
-    im2 = img.copy() 
-  
-    for cnt in contours: 
-        x, y, w, h = cv.boundingRect(cnt)    
-        rect = cv.rectangle(im2, (x, y), (x + w, y + h), (0, 255, 0), 2)    
-        cropped = im2[y:y + h, x:x + w]    
-        text = pytesseract.image_to_string(cropped) 
-    return len(text)
+# Đọc file ảnh và chuyển về ảnh xám
+image = cv2.imread(args["image"])
+gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+ 
+# Check xem có sử dụng tiền xử lý ảnh không
+# Nếu phân tách đen trắng
+if args["preprocess"] == "thresh":
+	gray = cv2.threshold(gray, 0, 255,
+		cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+ 
+# Nếu làm mờ ảnh
+elif args["preprocess"] == "blur":
+	gray = cv2.medianBlur(gray, 3)
+ 
+# Ghi tạm ảnh xuống ổ cứng để sau đó apply OCR
+filename = "{}.png".format(os.getpid())
+cv2.imwrite(filename, gray)
 
-   
-img = cv.imread(file) 
-imgTmp = ndimage.rotate(img, 180)
-imgs = [img, imgTmp]
-maxText = 0
-for i in imgs:
-    if(getTextNumber(i) > maxText):
-        maxText = getTextNumber(i)
-        img = i
+# Load ảnh và apply nhận dạng bằng Tesseract OCR
+text = pytesseract.image_to_string(Image.open(filename),lang='vie')
 
-cv.imshow('max', img)
-cv.waitKey(0)
+# Xóa ảnh tạm sau khi nhận dạng
+os.remove(filename)
 
+# In dòng chữ nhận dạng được
+print(text)
+ 
+# Hiển thị các ảnh chúng ta đã xử lý.
+cv2.imshow("Image", image)
+cv2.imshow("Output", gray)
 
-
-
-
-#def getTextNumber(img):  
-#    gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)  
-#    ret, thresh1 = cv.threshold(gray, 0, 255, cv.THRESH_OTSU | cv.THRESH_BINARY_INV)  
-#    rect_kernel = cv.getStructuringElement(cv.MORPH_RECT, (18, 18)) 
-#    print(thresh1)
-#    ilation = cv.dilate(thresh1, rect_kernel, iterations = 1)  
-#    contours, hierarchy = cv.findContours(dilation, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE) 
-#    img2 = img.copy() 
-#    for cnt in contours: 
-#        x, y, w, h = cv.boundingRect(cnt)   
-#        rect = cv.rectangle(img2, (x, y), (x + w, y + h), (0, 255, 0), 2)    
-#        cropped = img2[y:y + h, x:x + w]    
-#        text = pytesseract.image_to_string(cropped) 
-#    return len(text)
-
-#img = cv.imread(file) 
-#imgtmp = ndimage.rotate(img, 180)
-#imgs = [img, imgtmp]
-##for i in imgs:
-#print(getTextNumber(img))
-
+# Đợi chúng ta gõ phím bất kỳ
+cv2.waitKey(0)
